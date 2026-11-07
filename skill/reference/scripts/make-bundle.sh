@@ -7,7 +7,7 @@ cd "$(dirname "$0")"
 mkdir -p deploy
 node - <<'JS'
 const fs = require('fs'), cp = require('child_process');
-const list = cp.execSync("find app components lib data.json next.config.mjs tsconfig.json next-env.d.ts .env.production -type f 2>/dev/null || true").toString().trim().split('\n').filter(Boolean);
+const list = cp.execSync("find app components lib data.json next.config.mjs tsconfig.json next-env.d.ts .env.production middleware.ts -type f 2>/dev/null || true").toString().trim().split('\n').filter(Boolean);
 const m = {}; for (const f of list) m[f] = fs.readFileSync(f).toString('base64');
 fs.writeFileSync('deploy/unpack.mjs', `import fs from 'fs'; import path from 'path';\nconst F=${JSON.stringify(m)};\nfor (const [f,b] of Object.entries(F)) { fs.mkdirSync(path.dirname(f),{recursive:true}); fs.writeFileSync(f, Buffer.from(b,'base64')); }\nconsole.log('unpacked', Object.keys(F).length, 'files');\n`);
 const p = JSON.parse(fs.readFileSync('package.json')); p.scripts.build = 'node unpack.mjs && next build';

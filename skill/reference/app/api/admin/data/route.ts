@@ -3,6 +3,7 @@ import { notFound404 } from "../../../../lib/auth";
 import { validData, writeData } from "../../../../lib/store";
 export const dynamic = "force-dynamic";
 // POST the full DATA JSON with Authorization: Bearer <ADMIN_KEY>. Used by push-data.sh. No redeploy needed.
+export async function GET() { return notFound404(); }
 export async function POST(req: Request) {
   if (!isAdmin(req)) return notFound404();
   let d: any = null;

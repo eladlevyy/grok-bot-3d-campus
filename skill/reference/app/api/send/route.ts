@@ -1,17 +1,22 @@
 import { isAuthed, notFound404 } from "../../../lib/auth";
 import { lastRefreshAt, markRefresh, REFRESH_WINDOW_MS } from "../../../lib/store";
 import { getConfig } from "../../../lib/config";
+import { buildCommandText, headerOk, REFRESH_MSG, sanitizeCommandItem, webhookTargetOk } from "../../../lib/webhook";
 // Page buttons -> the bot's webhook routine. Body: { items: string[] } or { kind: "refresh" }; { dryRun: true } = health check.
 export const dynamic = "force-dynamic";
 export const maxDuration = 20;
-const REFRESH_MSG = "Refresh the control center data";
 let last = 0; // light per-instance limit: about one send every 5 seconds
+
+export async function GET() { return notFound404(); }
 
 export async function POST(req: Request) {
   if (!(await isAuthed())) return notFound404();
   let body: any = null;
   try { body = await req.json(); } catch {}
-  const { url, key, header } = await getConfig(); // env vars first, then the value saved on /setup
+  const cfg = await getConfig(); // env vars first, then the value saved on /setup
+  const url = webhookTargetOk(cfg.url) ? cfg.url : "";
+  const key = cfg.key;
+  const header = headerOk(cfg.header) ? cfg.header : "Authorization";
   const isRefresh = body?.kind === "refresh";
   if (body?.dryRun === true) {
     const waitMs = isRefresh ? Math.max(0, REFRESH_WINDOW_MS - (Date.now() - (await lastRefreshAt()))) : 0;
@@ -25,11 +30,11 @@ export async function POST(req: Request) {
   const now = Date.now();
   if (now - last < 5000) return Response.json({ ok: false, error: "Too fast, try again in a few seconds" }, { status: 429 });
   const items: string[] = isRefresh ? [REFRESH_MSG]
-    : Array.isArray(body?.items) ? body.items.filter((x: any) => typeof x === "string" && x.trim()).map((x: string) => x.trim().slice(0, 1000)).slice(0, 30) : [];
+    : Array.isArray(body?.items) ? body.items.filter((x: any) => typeof x === "string" && x.trim()).map((x: string) => sanitizeCommandItem(x)).filter(Boolean).slice(0, 30) : [];
   if (!items.length) return Response.json({ ok: false, error: "Nothing to send" }, { status: 400 });
   if (!url || !key) return Response.json({ ok: false, error: "Webhook not configured" }, { status: 503 });
   last = now;
-  const text = isRefresh ? REFRESH_MSG : `${items.length} request(s) from the control center:\n` + items.map((m, i) => `${i + 1}. ${m}`).join("\n");
+  const text = buildCommandText(items, isRefresh);
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (header.toLowerCase() === "authorization") headers.Authorization = `Bearer ${key}`; else headers[header] = key;
   try {

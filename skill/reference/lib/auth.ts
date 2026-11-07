@@ -13,7 +13,7 @@ const sign = (p: string) => crypto.createHmac("sha256", secret()).update(p).dige
 
 export function checkAccess(input?: string | null) {
   const t = accessToken();
-  if (!t || t.length < 24 || !secret() || !input) return false;
+  if (!t || t.length < 24 || !secret() || secret().length < 16 || !input) return false;
   return crypto.timingSafeEqual(h(input), h(t));
 }
 export function makeToken() {
@@ -21,9 +21,9 @@ export function makeToken() {
   return `v1.${exp}.${sign(`${exp}.${tag()}`)}`;
 }
 export function validToken(tok?: string | null) {
-  if (!tok || !secret() || !accessToken()) return false;
+  if (!tok || !secret() || secret().length < 16 || !accessToken()) return false;
   const [v, exp, mac] = tok.split(".");
-  if (v !== "v1" || !exp || !mac || Number(exp) * 1000 < Date.now()) return false;
+  if (v !== "v1" || !exp || !mac || !Number.isFinite(Number(exp)) || Number(exp) * 1000 < Date.now()) return false;
   const want = sign(`${exp}.${tag()}`);
   return mac.length === want.length && crypto.timingSafeEqual(Buffer.from(mac), Buffer.from(want));
 }
