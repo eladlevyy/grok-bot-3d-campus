@@ -1,4 +1,5 @@
 import { get, put } from "@vercel/blob";
+import { headerOk } from "./webhook";
 // Webhook settings for /api/send. Project env vars win; otherwise the values the user saved once
 // on the private /setup page (stored in the PRIVATE Blob). Values are never returned to any client.
 const CONFIG_PATH = "control-center/config.json";
@@ -19,7 +20,8 @@ export async function getConfig(): Promise<WebhookConfig> {
       }
     } catch {}
   }
-  return { url, key, header: header || "Authorization" };
+  const h = header || "Authorization";
+  return { url, key, header: headerOk(h) ? h : "Authorization" };
 }
 
 export async function saveConfig(c: WebhookConfig) {

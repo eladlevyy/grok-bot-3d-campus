@@ -14,10 +14,11 @@ rm -f app/page.tsx app/api/data/route.ts app/api/send/route.ts lib/demo-data.ts 
 cp -R "$REF/app/." app/
 cp -R "$REF/lib/." lib/
 cp "$REF/scripts/push-data.sh" "$REF/scripts/make-bundle.sh" .
+[ -f "$REF/middleware.ts" ] && cp "$REF/middleware.ts" middleware.ts
 chmod +x push-data.sh make-bundle.sh
 printf '%s\n' '{"UPDATED":"","USAGE":{"weeklyPct":0,"reset":"","onDemandPct":0,"period":"","byTeam":[],"topBots":[]},"TEAMS":[]}' > data.json
-# real-app wording in the UI
-sed -i 's/title: "Control Center · Demo", description: "[^"]*"/title: "Control Center", description: "Private"/' app/layout.tsx
+# real-app wording in the UI; robots metadata is not visual (private app must not be indexed)
+sed -i 's/title: "Control Center · Demo", description: "[^"]*"/title: "Control Center", description: "Private", robots: { index: false, follow: false }/' app/layout.tsx
 grep -q '/api/data' components/ControlCenter.tsx || { echo "unexpected UI file"; exit 1; }
 printf 'NEXT_PUBLIC_TIMEZONE=%s\n' "$TZ_NAME" > .env.production
 grep -q '^\.env\*' .gitignore || echo '.env*' >> .gitignore

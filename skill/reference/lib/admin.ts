@@ -3,7 +3,7 @@ import crypto from "crypto";
 export function isAdmin(req: Request) {
   const key = (process.env.ADMIN_KEY || "").trim();
   const got = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
-  if (!key || !got) return false;
+  if (!key || key.length < 24 || !got) return false;
   const h = (s: string) => crypto.createHash("sha256").update(s).digest();
   return crypto.timingSafeEqual(h(got), h(key));
 }
