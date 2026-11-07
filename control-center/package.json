@@ -1,0 +1,29 @@
+{
+  "name": "control-center",
+  "license": "MIT",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.8.2",
+    "next": "16.4.4",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "three": "0.187.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/three": "0.187.0",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "description": "Private control center. Empty data seed. No secrets in this tree."
+}
